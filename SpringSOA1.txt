@@ -1,0 +1,77 @@
+ 1.Create a field on Account named "Number of Contacts". Populate this field with the number of contacts related to an account. 
+
+trigger NumberofContactsonAccountTrigger on Contact (after insert, after update, after delete, after undelete) {
+    
+    if(Trigger.isAfter)
+    {
+        List<Account> AccList = new List<Account>();
+        Set<Id> AccIdNew = new Set<Id>();
+        Set<Id> AccIdOld = new Set<Id>();
+        Map<Id,List<Contact>> MapofAccIdConList = new Map<Id,List<Contact>>();
+        
+        if(Trigger.isInsert || Trigger.isUndelete || Trigger.isUpdate)
+        {
+            for(Contact conNew : Trigger.New)
+            {
+                if(conNew.AccountId != null)
+                {
+                    AccIdNew.add(conNew.AccountId);
+                }
+            }
+            if(AccIdNew.size()>0){
+                List<Contact> lstContNew = [Select Id,AccountId from Contact where AccountId in: AccIdNew ];
+                for(Contact con : lstContNew)
+                {
+                    if(MapofAccIdConList.containsKey(con.AccountId))
+                    {
+                        MapofAccIdConList.get(con.AccountId).add(con);
+                    }
+                    else
+                    {
+                        MapofAccIdConList.put(con.AccountId, new List<Contact> {con});
+                    }
+                }
+                
+            }
+        }
+        
+        if(Trigger.isDelete || Trigger.IsUpdate)
+        {
+            for(Contact contOld : Trigger.Old)
+            {
+                if(contOld.AccountId != null)
+                {
+                    AccIdOld.add(contOld.AccountId);
+                }
+            }
+            if(AccIdOld.size()>0){
+                List<Contact> lstContOld = [Select Id,AccountId from Contact where AccountId in: AccIdOld ];
+                for(Contact ct : lstContOld)
+                {
+                    if(MapofAccIdConList.containsKey(ct.AccountId))
+                    {
+                        MapofAccIdConList.get(ct.AccountId).add(ct);
+                    }
+                    else
+                    {
+                        MapofAccIdConList.put(ct.AccountId, new List<Contact> {ct});
+                    }
+                }
+            }
+        }
+        
+        for( Id actId : MapofAccIdConList.keySet())
+        {
+            Account act = new Account();
+            act.Id = actId;
+            act.Number_of_Contacts__c = MapofAccIdConList.get(actId).size();
+            AccList.add(act);
+        }
+        if(AccList.size()>0)
+        {
+            update AccList;
+        }
+        
+    }
+    
+}

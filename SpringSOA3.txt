@@ -1,0 +1,28 @@
+ 3. Make a basic http callout and print the result using system.debug
+
+https://postman-echo.com/get?foo1=bar1&foo2=bar2
+
+public class basichttpCallout {
+    
+    public void basichttpCalloutMethod()
+    {
+        Http http = New Http();
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint('https://postman-echo.com/get?foo1=bar1&foo2=bar2');
+        req.setMethod('GET');
+        System.debug(req);
+       
+        HttpResponse res = http.send(req);
+        System.debug(res);
+        
+        if(res.getStatusCode() == 200){
+            System.debug(res.getBody());
+        }
+    }
+}
+
+Anonymous window:
+====================
+
+basichttpCallout res = new basichttpCallout();
+res.basichttpCalloutMethod();
